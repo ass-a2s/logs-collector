@@ -112,11 +112,33 @@ elif [ -d /etc/kubernetes/ssl ]; then
   find /etc/kubernetes/ssl -type f -exec ls -la {} \; > $TMPDIR/k8s/directories/findetckubernetesssl 2>&1
 fi
 
+# K8s certs
+mkdir -p $TMPDIR/k8s/certs
+if [ -d /opt/rke/etc/kubernetes/ssl ]; then
+  CERTS=$(find /opt/rke/etc/kubernetes/ssl -type f -name *.pem | grep -v "\-key\.pem$")
+  for CERT in $CERTS; do
+    openssl x509 -in $CERT -text -noout > $TMPDIR/k8s/certs/$(basename $CERT) 2>&1
+  done
+elif [ -d /etc/kubernetes/ssl ]; then
+  CERTS=$(find /etc/kubernetes/ssl -type f -name *.pem | grep -v "\-key\.pem$")
+  for CERT in $CERTS; do
+    openssl x509 -in $CERT -text -noout > $TMPDIR/k8s/certs/$(basename $CERT) 2>&1
+  done
+fi
+
 # etcd
 mkdir -p $TMPDIR/etcd
 # /var/lib/etcd contents
 if [ -d /var/lib/etcd ]; then
   find /var/lib/etcd -type f -exec ls -la {} \; > $TMPDIR/etcd/findvarlibetcd 2>&1
+elif [ -d /opt/rke/var/lib/etcd ]; then
+  find /opt/rke/var/lib/etcd -type f -exec ls -la {} \; > $TMPDIR/etcd/findoptrkevarlibetcd 2>&1
+fi
+
+# nginx-proxy
+if docker inspect nginx-proxy >/dev/null 2>&1; then
+  mkdir -p $TMPDIR/k8s/nginx-proxy
+  docker exec nginx-proxy cat /etc/nginx/nginx.conf > $TMPDIR/k8s/nginx-proxy/nginx.conf 2>&1
 fi
 
 # /opt/rke contents

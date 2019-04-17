@@ -1,4 +1,4 @@
-# rancher-logs-collector
+# logs-collector
 
 The script needs to be downloaded and run directly on the host using the `root` user or using `sudo`.
 
